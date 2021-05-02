@@ -1,17 +1,23 @@
 package video.overlay.picture;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +26,9 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.bumptech.glide.Glide;
+import com.hbisoft.pickit.PickiT;
+import com.hbisoft.pickit.PickiTCallbacks;
 import com.linkedin.android.litr.MediaTransformer;
 import com.linkedin.android.litr.TrackTransform;
 import com.linkedin.android.litr.codec.MediaCodecDecoder;
@@ -66,10 +75,15 @@ public class HomeFragment extends Fragment {
     private static final String TAG = "HomeFragment";
     private MediaTransformer mediaTransformer;
     private TargetMedia targetMedia;
-    private SourceMedia sourceMedia ;
+    private SourceMedia sourceMedia;
     TransformationState transformationState;
     TargetVideoConfiguration targetVideoConfiguration;
     TransformationPresenter transformationPresenter;
+    String imageFilePath;
+    String videoFilePath;
+    PickiT pickiT;
+    String pickitProcess = "";
+    String RCode;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -79,6 +93,7 @@ public class HomeFragment extends Fragment {
         mediaTransformer = new MediaTransformer(getContext().getApplicationContext());
         targetMedia = new TargetMedia();
 
+        pickiT = new PickiT(getActivity(), pickiTCallbacks, getActivity());
         initListeners();
 
 
@@ -105,18 +120,38 @@ public class HomeFragment extends Fragment {
     }
 
     private void initListeners() {
-        binding.btnPickVideo.setOnClickListener(v -> pickVideo());
-        binding.btnPickImage.setOnClickListener(v -> pickImage());
+        binding.btnPickVideo.setOnClickListener(v ->
+        {
+            if (PermissionHelper.checkPermissions(getActivity())) {
+                pickVideo();
+            } else {
+                PermissionHelper.requestPermissions(this);
+            }
+
+        });
+        binding.btnPickImage.setOnClickListener(v -> {
+            if (PermissionHelper.checkPermissions(getActivity())) {
+                pickImage();
+            } else {
+                PermissionHelper.requestPermissions(this);
+            }
+        });
+
+
         binding.btnTranscode.setOnClickListener(v -> {
-           startVideoOverlayTransformation(sourceMedia, targetMedia, targetVideoConfiguration, transformationState);
+            Bundle bundle = new Bundle();
+            bundle.putString("video", videoFilePath);
+            bundle.putString("image", imageFilePath);
+            Navigation.findNavController(getView()).navigate(R.id.action_HomeFragment_to_PlayerFragment, bundle);
+            //startVideoOverlayTransformation(sourceMedia, targetMedia, targetVideoConfiguration, transformationState);
         });
 
         binding.btnPlay.setOnClickListener(v -> {
-            Log.e(TAG, "initListeners: "+ transformationState.progress );
+            Log.e(TAG, "initListeners: " + transformationState.progress);
 
             if (transformationState.progress >= 100) {
 //play(targetMedia.targetFile);
-                Log.e(TAG, "initListeners: Path = "+ targetMedia.targetFile.getAbsolutePath() );
+                Log.e(TAG, "initListeners: Path = " + targetMedia.targetFile.getAbsolutePath());
             }
         });
     }
@@ -218,9 +253,19 @@ public class HomeFragment extends Fragment {
         if (resultCode == RESULT_OK && data.getData() != null) {
             Log.e(TAG, "onActivityResult: " + data.getData());
             if (requestCode == PICK_IMAGE) {
+                pickitProcess = "image";
+                pickiT.getPath(data.getData(), Build.VERSION.SDK_INT);
+
+
                 targetMedia.backgroundImageUri = data.getData();
+                binding.imgPicture.setImageURI(data.getData());
 
             } else if (requestCode == PICK_VIDEO) {
+                pickitProcess = "video";
+                pickiT.getPath(data.getData(), Build.VERSION.SDK_INT);
+
+       //         Glide.with(getActivity()).load(data.getData()).into(binding.imgVideo);
+
 
                 updateSourceMedia(sourceMedia, data.getData());
                 File targetFile = new File(TransformationUtil.getTargetFileDirectory(),
@@ -348,6 +393,45 @@ public class HomeFragment extends Fragment {
             getActivity().startActivity(playIntent);
         }
     }
+
+    PickiTCallbacks pickiTCallbacks = new PickiTCallbacks() {
+        @Override
+        public void PickiTonUriReturned() {
+
+        }
+
+        @Override
+        public void PickiTonStartListener() {
+
+        }
+
+        @Override
+        public void PickiTonProgressUpdate(int progress) {
+
+        }
+
+        @Override
+        public void PickiTonCompleteListener(String path, boolean wasDriveFile, boolean wasUnknownProvider, boolean wasSuccessful, String Reason) {
+            Toast.makeText(getActivity(), "Real Path = " + path, Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "PickiTonCompleteListener: Real Path = " + path);
+            Log.e(TAG, "PickiTonCompleteListener: Real Path = " + pickitProcess);
+
+            if (pickitProcess.equalsIgnoreCase("image")) {
+                imageFilePath = path;
+                Log.e(TAG, "PickiTonCompleteListener: got to image" );
+            } else if (pickitProcess.equalsIgnoreCase("video")) {
+                videoFilePath = path;
+                Bitmap bMap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MICRO_KIND);
+                binding.imgVideo.setImageBitmap(bMap);
+                Log.e(TAG, "PickiTonCompleteListener: got to video" );
+            }
+
+           if (!TextUtils.isEmpty(imageFilePath) && !TextUtils.isEmpty(videoFilePath)) {
+               binding.btnTranscode.setVisibility(View.VISIBLE);
+           }
+
+        }
+    };
 
     private long getMediaDuration(@NonNull Uri uri) {
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
