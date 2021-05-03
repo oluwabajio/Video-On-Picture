@@ -1,10 +1,12 @@
 package video.overlay.picture;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
@@ -14,6 +16,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
@@ -33,6 +36,7 @@ import com.linkedin.android.litr.io.MediaTarget;
 import com.linkedin.android.litr.render.GlVideoRenderer;
 import com.linkedin.android.litr.utils.CodecUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -69,7 +73,7 @@ public class PlayerFragment extends Fragment {
     int xx1, yy1, xx2, yy2;
 
     PointF position;
-   PointF dimensions;
+    PointF dimensions;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -82,39 +86,54 @@ public class PlayerFragment extends Fragment {
         return view;
     }
 
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mediaTransformer.release();
+    }
+
     private void getBundleFromIntent() {
         mediaTransformer = new MediaTransformer(getContext().getApplicationContext());
-
-
         imageFilePath = getArguments().getString("image");
         videoFilePath = getArguments().getString("video");
-
         sourceMedia = MediaUtils.getInstance().getSourceMedia();
         targetMedia = MediaUtils.getInstance().getTargetMedia();
         targetVideoConfiguration = MediaUtils.getInstance().getTargetVideoConfiguration();
         transformationState = MediaUtils.getInstance().getTransformationState();
-
     }
 
     private void initListener() {
         binding.btnTranscode.setOnClickListener(v -> {
-           if (isValidPositionAndDimension()) {
-               startVideoOverlayTransformation(sourceMedia, targetMedia, targetVideoConfiguration, transformationState);
-           }
-
+            if (isValidPositionAndDimension()) {
+                startVideoOverlayTransformation(sourceMedia, targetMedia, targetVideoConfiguration, transformationState);
+            }
         });
 
         binding.btnPlay.setOnClickListener(v -> {
             Log.e(TAG, "initListeners: " + transformationState.progress);
-
             if (transformationState.progress >= 100) {
-//play(targetMedia.targetFile);
+               //play(targetMedia.targetFile);
                 Log.e(TAG, "initListeners: Path = " + targetMedia.targetFile.getAbsolutePath());
             }
+
 
         });
 
     }
+
+
+    public void play(@Nullable File targetFile) {
+        if (targetFile != null && targetFile.exists()) {
+            Intent playIntent = new Intent(Intent.ACTION_VIEW);
+            Uri videoUri = FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".provider", targetFile);
+            playIntent.setDataAndType(videoUri, "video/*");
+            playIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+            getActivity().startActivity(playIntent);
+        }
+    }
+
 
     private boolean isValidPositionAndDimension() {
 
@@ -126,25 +145,25 @@ public class PlayerFragment extends Fragment {
         float cx2 = (float) boxWidth / (float) bitmap.getWidth();
         float cy2 = (float) boxHeight / (float) bitmap.getHeight();
 
-        Log.e(TAG, "startVideoOverlayTransformation: boxwidth = "+ boxWidth + "boxHeight = "+boxHeight );
-        Log.e(TAG, "startVideoOverlayTransformation: cx2 "+ cx2 + "cy2 = " + cy2);
-        Log.e(TAG, "startVideoOverlayTransformation: width = "+ bitmap.getWidth() + "height = "+bitmap.getHeight() );
+        Log.e(TAG, "startVideoOverlayTransformation: boxwidth = " + boxWidth + "boxHeight = " + boxHeight);
+        Log.e(TAG, "startVideoOverlayTransformation: cx2 " + cx2 + "cy2 = " + cy2);
+        Log.e(TAG, "startVideoOverlayTransformation: width = " + bitmap.getWidth() + "height = " + bitmap.getHeight());
         dimensions = new PointF(cx2, cy2);
-       // dimensions = new PointF(1f, 1f);
+        // dimensions = new PointF(1f, 1f);
 
 
         float cx1 = (float) xx1 / (float) bitmap.getWidth();
         float cy1 = (float) yy1 / (float) bitmap.getHeight();
 
 
-        Log.e(TAG, "startVideoOverlayTransformation: xx1 = "+ xx1 + "yy1 = "+yy1 );
+        Log.e(TAG, "startVideoOverlayTransformation: xx1 = " + xx1 + "yy1 = " + yy1);
 
-        Log.e(TAG, "startVideoOverlayTransformation: width = "+ bitmap.getWidth() + "height = "+bitmap.getHeight() );
-        Log.e(TAG, "startVideoOverlayTransformation: cx1 "+ cx1 + "cy1 = " + cy1);
-        Log.e(TAG, "startVideoOverlayTransformation: mcx1 "+ cx1+(cx2/2) + "mcy1 = " + cy1+(cy2/2));
+        Log.e(TAG, "startVideoOverlayTransformation: width = " + bitmap.getWidth() + "height = " + bitmap.getHeight());
+        Log.e(TAG, "startVideoOverlayTransformation: cx1 " + cx1 + "cy1 = " + cy1);
+        Log.e(TAG, "startVideoOverlayTransformation: mcx1 " + cx1 + (cx2 / 2) + "mcy1 = " + cy1 + (cy2 / 2));
 
-        position = new PointF(cx1+(cx2/2), cy1+(cy2/2));
-       // position = new PointF(0.5f, 0.5f);
+        position = new PointF(cx1 + (cx2 / 2), cy1 + (cy2 / 2));
+        // position = new PointF(0.5f, 0.5f);
 
         return true;
     }
@@ -221,12 +240,8 @@ public class PlayerFragment extends Fragment {
                     }
 
 
-
-
-
-
                     Transform transform = new Transform(dimensions, position, 0);
-               //     Transform transform = new Transform(new PointF(1f, 1f), new PointF(1f, 0.55f), 0);
+                    //     Transform transform = new Transform(new PointF(1f, 1f), new PointF(1f, 0.55f), 0);
                     GlFrameRenderFilter frameRenderFilter = new DefaultVideoFrameRenderFilter(transform);
                     filters.add(frameRenderFilter);
 

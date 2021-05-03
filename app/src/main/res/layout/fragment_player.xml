@@ -13,9 +13,14 @@
 
 
     <TextView
+        android:id="@+id/tv1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Select area to put video on"
+        android:layout_gravity="center_horizontal"
+        android:textSize="18sp"
+        android:layout_centerHorizontal="true"
+        android:textStyle="bold"
         android:textColor="@color/white" />
 
     <me.littlecheesecake.croplayout.EditPhotoView
@@ -28,6 +33,7 @@
         crop:crop_dot_color="#333333"
         crop:crop_line_color="#d7af55"
         android:layout_above="@id/ly1"
+        android:layout_below="@+id/tv1"
         crop:crop_shadow_color="#77ffffff" />
 
     <LinearLayout

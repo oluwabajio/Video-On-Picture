@@ -80,7 +80,6 @@ public class HomeFragment extends Fragment {
     private SourceMedia sourceMedia;
     TransformationState transformationState;
     TargetVideoConfiguration targetVideoConfiguration;
-    TransformationPresenter transformationPresenter;
     String imageFilePath;
     String videoFilePath;
     PickiT pickiT;
@@ -92,27 +91,21 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View view = binding.getRoot();
 
-        mediaTransformer = new MediaTransformer(getContext().getApplicationContext());
-        targetMedia = new TargetMedia();
-
-        pickiT = new PickiT(getActivity(), pickiTCallbacks, getActivity());
         initListeners();
-
-
-        if (PermissionHelper.checkPermissions(getActivity())) {
-
-        } else {
-            PermissionHelper.requestPermissions(this);
-        }
-
-
+        requestPermission();
+        targetMedia = new TargetMedia();
         sourceMedia = new SourceMedia();
+        pickiT = new PickiT(getActivity(), pickiTCallbacks, getActivity());
         targetVideoConfiguration = new TargetVideoConfiguration();
         transformationState = new TransformationState();
-        transformationPresenter = new TransformationPresenter(getContext(), mediaTransformer);
-
 
         return view;
+    }
+
+    private void requestPermission() {
+        if (!PermissionHelper.checkPermissions(getActivity())) {
+            PermissionHelper.requestPermissions(this);
+        }
     }
 
     @Override
@@ -123,23 +116,14 @@ public class HomeFragment extends Fragment {
 
     private void initListeners() {
         binding.btnPickVideo.setOnClickListener(v -> {
-            if (PermissionHelper.checkPermissions(getActivity())) {
-                pickVideo();
-            } else {
-                PermissionHelper.requestPermissions(this);
-            }
-
+            selectVideo();
         });
         binding.btnPickImage.setOnClickListener(v -> {
-            if (PermissionHelper.checkPermissions(getActivity())) {
-                pickImage();
-            } else {
-                PermissionHelper.requestPermissions(this);
-            }
+            selectImage();
         });
 
 
-        binding.btnTranscode.setOnClickListener(v -> {
+        binding.btnNext.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putString("video", videoFilePath);
             bundle.putString("image", imageFilePath);
@@ -147,72 +131,26 @@ public class HomeFragment extends Fragment {
             MediaUtils.getInstance().setSourceMedia(sourceMedia);
             MediaUtils.getInstance().setTargetVideoConfiguration(targetVideoConfiguration);
             MediaUtils.getInstance().setTransformationState(transformationState);
-
             Navigation.findNavController(getView()).navigate(R.id.action_HomeFragment_to_PlayerFragment, bundle);
-         //   startVideoOverlayTransformation(sourceMedia, targetMedia, targetVideoConfiguration, transformationState);
         });
 
-        binding.btnPlay.setOnClickListener(v -> {
-            Log.e(TAG, "initListeners: " + transformationState.progress);
-
-            if (transformationState.progress >= 100) {
-//play(targetMedia.targetFile);
-                Log.e(TAG, "initListeners: Path = " + targetMedia.targetFile.getAbsolutePath());
-            }
-        });
     }
 
-    public void startVideoOverlayTransformation(@NonNull SourceMedia sourceMedia, @NonNull TargetMedia targetMedia, @NonNull TargetVideoConfiguration targetVideoConfiguration, @NonNull TransformationState transformationState) {
-        if (targetMedia.getIncludedTrackCount() < 1) {
-            return;
-        }
-
-        if (targetMedia.targetFile.exists()) {
-            targetMedia.targetFile.delete();
-        }
-
-        transformationState.requestId = UUID.randomUUID().toString();
-        MediaTransformationListener transformationListener = new MediaTransformationListener(getActivity(), transformationState.requestId, transformationState);
-
-        try {
-            MediaTarget mediaTarget = new MediaMuxerMediaTarget(targetMedia.targetFile.getPath(), targetMedia.getIncludedTrackCount(), targetVideoConfiguration.rotation, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-
-            List<TrackTransform> trackTransforms = new ArrayList<>(targetMedia.tracks.size());
-            MediaSource mediaSource = new MediaExtractorMediaSource(getActivity(), sourceMedia.uri);
-
-            for (TargetTrack targetTrack : targetMedia.tracks) {
-                if (!targetTrack.shouldInclude) {
-                    continue;
-                }
-                MediaFormat mediaFormat = createMediaFormat(targetTrack);
-                if (mediaFormat != null && targetTrack.format instanceof VideoTrackFormat) {
-                    mediaFormat.setInteger(KEY_ROTATION, targetVideoConfiguration.rotation);
-                }
-                TrackTransform.Builder trackTransformBuilder = new TrackTransform.Builder(mediaSource, targetTrack.sourceTrackIndex, mediaTarget).setTargetTrack(trackTransforms.size()).setTargetFormat(mediaFormat).setEncoder(new MediaCodecEncoder()).setDecoder(new MediaCodecDecoder());
-                if (targetTrack.format instanceof VideoTrackFormat) {
-                    // adding background bitmap first, to ensure that video renders on top of it
-                    List<GlFilter> filters = new ArrayList<>();
-                    if (targetMedia.backgroundImageUri != null) {
-                        GlFilter backgroundImageFilter = TransformationUtil.createGlFilter(getActivity(), targetMedia.backgroundImageUri, new PointF(1, 1), new PointF(0.5f, 0.5f), 0);
-                        filters.add(backgroundImageFilter);
-                    }
-
-                    Transform transform = new Transform(new PointF(1f, 1f), new PointF(1f, 0.55f), 0);
-                    GlFrameRenderFilter frameRenderFilter = new DefaultVideoFrameRenderFilter(transform);
-                    filters.add(frameRenderFilter);
-
-                    trackTransformBuilder.setRenderer(new GlVideoRenderer(filters));
-                }
-
-                trackTransforms.add(trackTransformBuilder.build());
-            }
-
-            mediaTransformer.transform(transformationState.requestId, trackTransforms, transformationListener, MediaTransformer.GRANULARITY_DEFAULT);
-        } catch (MediaTransformationException ex) {
-            Log.e(TAG, "Exception when trying to perform track operation", ex);
+    private void selectImage() {
+        if (PermissionHelper.checkPermissions(getActivity())) {
+            pickImage();
+        } else {
+            PermissionHelper.requestPermissions(this);
         }
     }
 
+    private void selectVideo() {
+        if (PermissionHelper.checkPermissions(getActivity())) {
+            pickVideo();
+        } else {
+            PermissionHelper.requestPermissions(this);
+        }
+    }
 
     private void pickImage() {
         pickMedia("image/*", PICK_IMAGE);
@@ -312,7 +250,6 @@ public class HomeFragment extends Fragment {
 
     private void pickMedia(@NonNull String type, int pickMedia) {
         int PICK_MEDIA = pickMedia;
-
         Intent intent = new Intent();
         intent.setType(type);
         intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -339,57 +276,19 @@ public class HomeFragment extends Fragment {
         return -1;
     }
 
-    private MediaFormat createMediaFormat(@Nullable TargetTrack targetTrack) {
-        MediaFormat mediaFormat = null;
-        if (targetTrack != null && targetTrack.format != null) {
-            mediaFormat = new MediaFormat();
-            if (targetTrack.format.mimeType.startsWith("video")) {
-                VideoTrackFormat trackFormat = (VideoTrackFormat) targetTrack.format;
-                String mimeType = CodecUtils.MIME_TYPE_VIDEO_AVC;
-                mediaFormat.setString(MediaFormat.KEY_MIME, mimeType);
-                mediaFormat.setInteger(MediaFormat.KEY_WIDTH, trackFormat.width);
-                mediaFormat.setInteger(MediaFormat.KEY_HEIGHT, trackFormat.height);
-                mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, trackFormat.bitrate);
-                mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, trackFormat.keyFrameInterval);
-                mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, trackFormat.frameRate);
-            } else if (targetTrack.format.mimeType.startsWith("audio")) {
-                AudioTrackFormat trackFormat = (AudioTrackFormat) targetTrack.format;
-                mediaFormat.setString(MediaFormat.KEY_MIME, trackFormat.mimeType);
-                mediaFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, trackFormat.channelCount);
-                mediaFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, trackFormat.samplingRate);
-                mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, trackFormat.bitrate);
-            }
-        }
 
-        return mediaFormat;
-    }
-
-
-    public void play(@Nullable File targetFile) {
-        if (targetFile != null && targetFile.exists()) {
-            Intent playIntent = new Intent(Intent.ACTION_VIEW);
-            Uri videoUri = FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".provider", targetFile);
-            playIntent.setDataAndType(videoUri, "video/*");
-            playIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-            getActivity().startActivity(playIntent);
-        }
-    }
 
     PickiTCallbacks pickiTCallbacks = new PickiTCallbacks() {
         @Override
         public void PickiTonUriReturned() {
-
         }
 
         @Override
         public void PickiTonStartListener() {
-
         }
 
         @Override
         public void PickiTonProgressUpdate(int progress) {
-
         }
 
         @Override
@@ -411,7 +310,7 @@ public class HomeFragment extends Fragment {
             }
 
             if (!TextUtils.isEmpty(imageFilePath) && !TextUtils.isEmpty(videoFilePath)) {
-                binding.btnTranscode.setVisibility(View.VISIBLE);
+                binding.btnNext.setVisibility(View.VISIBLE);
             }
 
         }
