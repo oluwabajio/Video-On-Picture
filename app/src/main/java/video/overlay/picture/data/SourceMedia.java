@@ -10,11 +10,11 @@ package video.overlay.picture.data;
 import android.net.Uri;
 
 
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SourceMedia  {
+public class SourceMedia implements Serializable {
 
     public Uri uri;
     public long size;

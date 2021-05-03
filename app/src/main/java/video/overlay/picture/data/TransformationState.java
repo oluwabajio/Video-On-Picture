@@ -7,14 +7,17 @@
  */
 package video.overlay.picture.data;
 
+import android.util.Log;
+
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
 
 
+import java.io.Serializable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class TransformationState {
+public class TransformationState implements Serializable {
 
     public static final int MAX_PROGRESS = 100;
 
@@ -47,6 +50,7 @@ public class TransformationState {
 
     public void setProgress(int progress) {
         this.progress = progress;
+        Log.e("TAG", "setProgress: Progress = "+ progress );
         
     }
 

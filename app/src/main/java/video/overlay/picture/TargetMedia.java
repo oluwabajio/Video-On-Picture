@@ -2,6 +2,7 @@ package video.overlay.picture;
 
 
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,6 +11,7 @@ import androidx.annotation.Nullable;
 import com.linkedin.android.litr.filter.GlFilter;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +22,7 @@ import video.overlay.picture.data.TargetTrack;
 import video.overlay.picture.data.TargetVideoTrack;
 import video.overlay.picture.data.VideoTrackFormat;
 
-public class TargetMedia {
+public class TargetMedia implements Serializable {
 
     public static final int DEFAULT_VIDEO_WIDTH = 1280;
     public static final int DEFAULT_VIDEO_HEIGHT = 720;
@@ -33,41 +35,33 @@ public class TargetMedia {
     public Uri backgroundImageUri;
     public GlFilter filter;
 
-    public void setTracks(@NonNull List<MediaTrackFormat> sourceTracks) {
+    public void setTracks(@NonNull List<MediaTrackFormat> sourceTracks, int width, int height) {
         tracks = new ArrayList<>(sourceTracks.size());
         for (MediaTrackFormat sourceTrackFormat : sourceTracks) {
             TargetTrack targetTrack;
             if (sourceTrackFormat instanceof VideoTrackFormat) {
                 VideoTrackFormat trackFormat = new VideoTrackFormat((VideoTrackFormat) sourceTrackFormat);
-                trackFormat.width = DEFAULT_VIDEO_WIDTH;
-                trackFormat.height = DEFAULT_VIDEO_HEIGHT;
+                trackFormat.width = (width > 100) ? width : DEFAULT_VIDEO_WIDTH;
+                trackFormat.height = (height > 100) ? height : DEFAULT_VIDEO_HEIGHT;
                 trackFormat.bitrate = DEFAULT_VIDEO_BITRATE;
                 trackFormat.keyFrameInterval = DEFAULT_KEY_FRAME_INTERVAL;
-                targetTrack = new TargetVideoTrack(sourceTrackFormat.index,
-                        true,
-                        false,
-                        trackFormat);
+                targetTrack = new TargetVideoTrack(sourceTrackFormat.index, true, false, trackFormat);
+                Log.e("TAG", "setTracks: track width = "+ trackFormat.width );
             } else if (sourceTrackFormat instanceof AudioTrackFormat) {
                 AudioTrackFormat trackFormat = new AudioTrackFormat((AudioTrackFormat) sourceTrackFormat);
                 trackFormat.bitrate = DEFAULT_AUDIO_BITRATE;
-                targetTrack = new TargetAudioTrack(sourceTrackFormat.index,
-                        true,
-                        false,
-                        trackFormat);
+                targetTrack = new TargetAudioTrack(sourceTrackFormat.index, true, false, trackFormat);
             } else {
-                targetTrack = new TargetTrack(sourceTrackFormat.index,
-                        true,
-                        false,
-                        new MediaTrackFormat(sourceTrackFormat));
+                targetTrack = new TargetTrack(sourceTrackFormat.index, true, false, new MediaTrackFormat(sourceTrackFormat));
             }
             tracks.add(targetTrack);
         }
-       
+
     }
 
     public void setTargetFile(@NonNull File targetFile) {
         this.targetFile = targetFile;
-       
+
     }
 
     public int getIncludedTrackCount() {
@@ -86,7 +80,7 @@ public class TargetMedia {
                 ((TargetVideoTrack) targetTrack).overlay = overlayImageUri;
             }
         }
-       
+
     }
 
     @Nullable

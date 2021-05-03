@@ -101,7 +101,7 @@ public class TransformationUtil {
     public static File getTargetFileDirectory() {
         File targetDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
                                             + File.separator
-                                            + "LiTr");
+                                            + "Vid");
         if (!targetDirectory.exists()) {
             targetDirectory.mkdirs();
         }

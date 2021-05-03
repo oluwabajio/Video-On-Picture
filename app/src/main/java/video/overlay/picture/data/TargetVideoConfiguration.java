@@ -3,9 +3,10 @@ package video.overlay.picture.data;
 import android.view.View;
 import android.widget.AdapterView;
 
+import java.io.Serializable;
 
 
-public class TargetVideoConfiguration {
+public class TargetVideoConfiguration implements Serializable {
 
     public int rotation;
 

@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import video.overlay.picture.TargetMedia;
 import video.overlay.picture.data.utils.TransformationUtil;
 
 public class TransformationPresenter {
