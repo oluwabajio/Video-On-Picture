@@ -75,7 +75,6 @@ public class HomeFragment extends Fragment {
     int PICK_IMAGE = 101;
     int PICK_VIDEO = 102;
     private static final String TAG = "HomeFragment";
-    private MediaTransformer mediaTransformer;
     private TargetMedia targetMedia;
     private SourceMedia sourceMedia;
     TransformationState transformationState;
@@ -106,12 +105,6 @@ public class HomeFragment extends Fragment {
         if (!PermissionHelper.checkPermissions(getActivity())) {
             PermissionHelper.requestPermissions(this);
         }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mediaTransformer.release();
     }
 
     private void initListeners() {
