@@ -83,7 +83,7 @@ public class TransformationPresenter {
         transformationState.requestId = UUID.randomUUID().toString();
         MediaTransformationListener transformationListener = new MediaTransformationListener(context,
                 transformationState.requestId,
-                transformationState);
+                transformationState, null);
 
         try {
             int videoRotation = 0;
@@ -154,7 +154,7 @@ public class TransformationPresenter {
         transformationState.requestId = UUID.randomUUID().toString();
         MediaTransformationListener transformationListener = new MediaTransformationListener(context,
                 transformationState.requestId,
-                transformationState);
+                transformationState, null);
 
         try {
             MediaTarget mediaTarget = new MediaMuxerMediaTarget(targetMedia.targetFile.getPath(),
@@ -225,7 +225,7 @@ public class TransformationPresenter {
         transformationState.requestId = UUID.randomUUID().toString();
         MediaTransformationListener transformationListener = new MediaTransformationListener(context,
                 transformationState.requestId,
-                transformationState);
+                transformationState, null);
 
         try {
             int videoRotation = 0;
@@ -312,7 +312,7 @@ public class TransformationPresenter {
         transformationState.requestId = UUID.randomUUID().toString();
         MediaTransformationListener transformationListener = new MediaTransformationListener(context,
                 transformationState.requestId,
-                transformationState);
+                transformationState, null);
 
         List<GlFilter> watermarkImageFilter = null;
         for (TargetTrack targetTrack : targetMedia.tracks) {
@@ -358,7 +358,7 @@ public class TransformationPresenter {
         transformationState.requestId = UUID.randomUUID().toString();
         MediaTransformationListener transformationListener = new MediaTransformationListener(context,
                 transformationState.requestId,
-                transformationState);
+                transformationState, null);
 
         TransformationOptions transformationOptions = new TransformationOptions.Builder()
                 .setGranularity(MediaTransformer.GRANULARITY_DEFAULT)

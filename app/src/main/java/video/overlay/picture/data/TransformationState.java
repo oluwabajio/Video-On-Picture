@@ -50,7 +50,7 @@ public class TransformationState implements Serializable {
 
     public void setProgress(int progress) {
         this.progress = progress;
-        Log.e("TAG", "setProgress: Progress = "+ progress );
+//        Log.e("TAG", "setProgress: Progress = "+ progress );
         
     }
 

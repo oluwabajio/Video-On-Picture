@@ -12,55 +12,97 @@
     tools:context=".PlayerFragment">
 
 
-    <TextView
-        android:id="@+id/tv1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select area to put video on"
-        android:layout_gravity="center_horizontal"
-        android:textSize="18sp"
-        android:layout_centerHorizontal="true"
-        android:textStyle="bold"
-        android:textColor="@color/white" />
 
-    <me.littlecheesecake.croplayout.EditPhotoView
-        android:id="@+id/imageView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="20dp"
-        android:background="#fff"
-        crop:crop_corner_color="#45B4CA"
-        crop:crop_dot_color="#333333"
-        crop:crop_line_color="#d7af55"
-        android:layout_above="@id/ly1"
-        android:layout_below="@+id/tv1"
-        crop:crop_shadow_color="#77ffffff" />
 
     <LinearLayout
         android:id="@+id/ly1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:gravity="center_horizontal"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@id/ly4"
         android:orientation="vertical">
-    <TextView
-        android:id="@+id/tv"
+        <TextView
+            android:id="@+id/tv1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="center_horizontal"
+            android:text="Select area to put video on"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <me.littlecheesecake.croplayout.EditPhotoView
+            android:id="@+id/imageView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_above="@id/ly1"
+            android:layout_below="@+id/tv1"
+            android:layout_margin="20dp"
+            android:background="#fff"
+            crop:crop_corner_color="#45B4CA"
+            crop:crop_dot_color="#333333"
+            crop:crop_line_color="#d7af55"
+            crop:crop_shadow_color="#77ffffff" />
+
+        <TextView
+            android:id="@+id/tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/btnTranscode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="PROCEED"
+           />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ly4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/adView"
+        android:orientation="vertical"
+        android:visibility="gone"
+        >
+
+        <TextView
+            android:id="@+id/tvInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:visibility="gone"
+            android:textSize="17sp"/>
+        <Button
+            android:id="@+id/btnPlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:visibility="gone"
+            android:text="Play Video" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:max="100"
+            android:visibility="gone" />
+    </LinearLayout>
+    <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/adView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/white" />
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        ads:adSize="BANNER"
+        android:layout_marginTop="15dp"
+        ads:adUnitId="ca-app-pub-2439901986027384/4431327078"></com.google.android.gms.ads.AdView>
 
-    <Button
-        android:id="@+id/btnTranscode"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Transcode"
-        tools:visibility="visible" />
 
-    <Button
-        android:id="@+id/btnPlay"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:text="Play" />
-    </LinearLayout>
 </RelativeLayout>

@@ -12,79 +12,106 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_above="@id/adView"
         android:layout_centerVertical="true"
+        android:gravity="center_vertical"
         android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Place Video on an Image"
-            android:textColor="@color/white"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginVertical="10dp"
-            android:textSize="18sp"
-            android:textStyle="bold"/>
-
-        <LinearLayout
-            android:id="@+id/ly1"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="10dp"
-            android:background="@drawable/ly_bg"
-            android:paddingVertical="15dp">
+            android:layout_height="wrap_content">
 
-            <ImageView
-                android:id="@+id/imgPicture"
-                android:layout_width="0dp"
-                android:layout_height="70dp"
-                android:layout_marginRight="10dp"
-                android:layout_weight="1" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
 
-            <Button
-                android:id="@+id/btnPickImage"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:text="Select Image" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginVertical="10dp"
+                    android:text="Place Video on an Image"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-        <LinearLayout
-            android:id="@+id/ly2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="10dp"
-            android:background="@drawable/ly_bg"
-            android:layout_marginTop="10dp"
-            android:paddingVertical="15dp">
+                <LinearLayout
+                    android:id="@+id/ly1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/ly_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="15dp">
 
-            <ImageView
-                android:id="@+id/imgVideo"
-                android:layout_width="0dp"
-                android:layout_height="70dp"
-                android:layout_marginRight="10dp"
-                android:layout_weight="1" />
+                    <ImageView
+                        android:id="@+id/imgPicture"
+                        android:layout_width="0dp"
+                        android:layout_height="70dp"
+                        android:layout_marginRight="10dp"
+                        android:layout_weight="1" />
 
-            <Button
-                android:id="@+id/btnPickVideo"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:text="Select Video" />
-        </LinearLayout>
+                    <Button
+                        android:id="@+id/btnPickImage"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:text="Select Image" />
+                </LinearLayout>
 
-        <Button
-            android:id="@+id/btnNext"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="NEXT"
-            android:visibility="gone"
-            tools:visibility="visible" />
+                <LinearLayout
+                    android:id="@+id/ly2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/ly_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="15dp">
+
+                    <ImageView
+                        android:id="@+id/imgVideo"
+                        android:layout_width="0dp"
+                        android:layout_height="70dp"
+                        android:layout_marginRight="10dp"
+                        android:layout_weight="1" />
+
+                    <Button
+                        android:id="@+id/btnPickVideo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:text="Select Video" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnNext"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="NEXT"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+            </LinearLayout>
+
+        </ScrollView>
+
+
     </LinearLayout>
 
+    <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/adView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        ads:adSize="BANNER"
+        ads:adUnitId="ca-app-pub-2439901986027384/4431327078"></com.google.android.gms.ads.AdView>
 
 </RelativeLayout>

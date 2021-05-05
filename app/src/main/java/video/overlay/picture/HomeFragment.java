@@ -28,6 +28,10 @@ import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.hbisoft.pickit.PickiT;
 import com.hbisoft.pickit.PickiTCallbacks;
 import com.linkedin.android.litr.MediaTransformer;
@@ -49,7 +53,9 @@ import com.linkedin.android.litr.utils.TranscoderUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -98,7 +104,20 @@ public class HomeFragment extends Fragment {
         targetVideoConfiguration = new TargetVideoConfiguration();
         transformationState = new TransformationState();
 
+        initAds();
         return view;
+    }
+
+    private void initAds() {
+        MobileAds.initialize(getActivity(), new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        binding.adView.loadAd(adRequest);
+
     }
 
     private void requestPermission() {
@@ -184,7 +203,7 @@ public class HomeFragment extends Fragment {
 
 
                 updateSourceMedia(sourceMedia, data.getData());
-                File targetFile = new File(TransformationUtil.getTargetFileDirectory(), "transcoded_" + TransformationUtil.getDisplayName(getContext(), data.getData()));
+                File targetFile = new File(TransformationUtil.getTargetFileDirectory(), "VideoOnPicture_" + new SimpleDateFormat("yyyyMM_dd-HHmmss").format(new Date()));
                 targetMedia.setTargetFile(targetFile);
                 targetMedia.setTracks(sourceMedia.tracks, bitmap.getWidth(), bitmap.getHeight());
 
@@ -270,7 +289,6 @@ public class HomeFragment extends Fragment {
     }
 
 
-
     PickiTCallbacks pickiTCallbacks = new PickiTCallbacks() {
         @Override
         public void PickiTonUriReturned() {
@@ -286,7 +304,7 @@ public class HomeFragment extends Fragment {
 
         @Override
         public void PickiTonCompleteListener(String path, boolean wasDriveFile, boolean wasUnknownProvider, boolean wasSuccessful, String Reason) {
-            Toast.makeText(getActivity(), "Real Path = " + path, Toast.LENGTH_SHORT).show();
+            //   Toast.makeText(getActivity(), "Real Path = " + path, Toast.LENGTH_SHORT).show();
             Log.e(TAG, "PickiTonCompleteListener: Real Path = " + path);
             Log.e(TAG, "PickiTonCompleteListener: Real Path = " + pickitProcess);
 

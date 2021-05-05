@@ -20,6 +20,15 @@ import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.google.android.gms.ads.AdError;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.linkedin.android.litr.MediaTransformer;
 import com.linkedin.android.litr.TrackTransform;
 import com.linkedin.android.litr.codec.MediaCodecDecoder;
@@ -75,6 +84,8 @@ public class PlayerFragment extends Fragment {
     PointF position;
     PointF dimensions;
 
+    private InterstitialAd mInterstitialAd;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -83,7 +94,66 @@ public class PlayerFragment extends Fragment {
         getBundleFromIntent();
         initAreaSelection();
         initListener();
+        initAds();
         return view;
+    }
+
+    private void initAds() {
+        MobileAds.initialize(getActivity(), new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+
+        AdRequest adRequest1 = new AdRequest.Builder().build();
+        binding.adView.loadAd(adRequest1);
+
+
+
+
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        InterstitialAd.load(getActivity(),"ca-app-pub-2439901986027384/3214448329", adRequest, new InterstitialAdLoadCallback() {
+            @Override
+            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                // The mInterstitialAd reference will be null until
+                // an ad is loaded.
+                mInterstitialAd = interstitialAd;
+                Log.i(TAG, "onAdLoaded");
+                mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback(){
+                    @Override
+                    public void onAdDismissedFullScreenContent() {
+                        // Called when fullscreen content is dismissed.
+                        Log.d("TAG", "The ad was dismissed.");
+                    }
+
+                    @Override
+                    public void onAdFailedToShowFullScreenContent(AdError adError) {
+                        // Called when fullscreen content failed to show.
+                        Log.d("TAG", "The ad failed to show.");
+                    }
+
+                    @Override
+                    public void onAdShowedFullScreenContent() {
+                        // Called when fullscreen content is shown.
+                        // Make sure to set your reference to null so you don't
+                        // show it a second time.
+                        mInterstitialAd = null;
+                        Log.d("TAG", "The ad was shown.");
+                    }
+                });
+            }
+
+            @Override
+            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                // Handle the error
+                Log.i(TAG, loadAdError.getMessage());
+                mInterstitialAd = null;
+            }
+        });
+
+
+
     }
 
 
@@ -111,10 +181,10 @@ public class PlayerFragment extends Fragment {
         });
 
         binding.btnPlay.setOnClickListener(v -> {
-            Log.e(TAG, "initListeners: " + transformationState.progress);
+
             if (transformationState.progress >= 100) {
-               //play(targetMedia.targetFile);
-                Log.e(TAG, "initListeners: Path = " + targetMedia.targetFile.getAbsolutePath());
+               play(targetMedia.targetFile);
+
             }
 
 
@@ -141,30 +211,33 @@ public class PlayerFragment extends Fragment {
         Bitmap bitmap = BitmapFactory.decodeFile(imageFilePath);
         float boxWidth = xx2 - xx1;
         float boxHeight = yy2 - yy1;
-
         float cx2 = (float) boxWidth / (float) bitmap.getWidth();
         float cy2 = (float) boxHeight / (float) bitmap.getHeight();
 
-        Log.e(TAG, "startVideoOverlayTransformation: boxwidth = " + boxWidth + "boxHeight = " + boxHeight);
-        Log.e(TAG, "startVideoOverlayTransformation: cx2 " + cx2 + "cy2 = " + cy2);
-        Log.e(TAG, "startVideoOverlayTransformation: width = " + bitmap.getWidth() + "height = " + bitmap.getHeight());
-        dimensions = new PointF(cx2, cy2);
-        // dimensions = new PointF(1f, 1f);
 
 
-        float cx1 = (float) xx1 / (float) bitmap.getWidth();
-        float cy1 = (float) yy1 / (float) bitmap.getHeight();
+        if ((xx1 == 0) || (xx2 == 0) || (yy1 == 0) || (yy2 == 0)) {
+            dimensions = new PointF(0.5f, 0.5f);
+        } else {
+            Log.e(TAG, "startVideoOverlayTransformation: boxwidth = " + boxWidth + "boxHeight = " + boxHeight);
+            Log.e(TAG, "startVideoOverlayTransformation: cx2 " + cx2 + "cy2 = " + cy2);
+            Log.e(TAG, "startVideoOverlayTransformation: width = " + bitmap.getWidth() + "height = " + bitmap.getHeight());
+            dimensions = new PointF(cx2, cy2);
+        }
 
 
-        Log.e(TAG, "startVideoOverlayTransformation: xx1 = " + xx1 + "yy1 = " + yy1);
+        if ((xx1 == 0) || (xx2 == 0) || (yy1 == 0) || (yy2 == 0)) {
+            position = new PointF(0.5f, 0.5f);
+        } else {
 
-        Log.e(TAG, "startVideoOverlayTransformation: width = " + bitmap.getWidth() + "height = " + bitmap.getHeight());
-        Log.e(TAG, "startVideoOverlayTransformation: cx1 " + cx1 + "cy1 = " + cy1);
-        Log.e(TAG, "startVideoOverlayTransformation: mcx1 " + cx1 + (cx2 / 2) + "mcy1 = " + cy1 + (cy2 / 2));
-
-        position = new PointF(cx1 + (cx2 / 2), cy1 + (cy2 / 2));
-        // position = new PointF(0.5f, 0.5f);
-
+            float cx1 = (float) xx1 / (float) bitmap.getWidth();
+            float cy1 = (float) yy1 / (float) bitmap.getHeight();
+            Log.e(TAG, "startVideoOverlayTransformation: xx1 = " + xx1 + "yy1 = " + yy1);
+            Log.e(TAG, "startVideoOverlayTransformation: width = " + bitmap.getWidth() + "height = " + bitmap.getHeight());
+            Log.e(TAG, "startVideoOverlayTransformation: cx1 " + cx1 + "cy1 = " + cy1);
+            Log.e(TAG, "startVideoOverlayTransformation: mcx1 " + cx1 + (cx2 / 2) + "mcy1 = " + cy1 + (cy2 / 2));
+            position = new PointF(cx1 + (cx2 / 2), cy1 + (cy2 / 2));
+        }
         return true;
     }
 
@@ -214,7 +287,28 @@ public class PlayerFragment extends Fragment {
         }
 
         transformationState.requestId = UUID.randomUUID().toString();
-        MediaTransformationListener transformationListener = new MediaTransformationListener(getActivity(), transformationState.requestId, transformationState);
+        MediaTransformationListener transformationListener = new MediaTransformationListener(getActivity(), transformationState.requestId, transformationState, new OnProgressListener() {
+            @Override
+            public void onProgress(int progress) {
+                binding.btnTranscode.setVisibility(View.GONE);
+                binding.ly4.setVisibility(View.VISIBLE);
+                binding.progressBar.setVisibility(View.VISIBLE);
+                binding.progressBar.setProgress(progress);
+                Log.e("TAG", "setProgress: Progress = "+ progress );
+
+            }
+
+            @Override
+            public void onCompleted() {
+                binding.ly1.setVisibility(View.GONE);
+                binding.progressBar.setVisibility(View.GONE);
+                binding.btnPlay.setVisibility(View.VISIBLE);
+                binding.tvInfo.setVisibility(View.VISIBLE);
+                binding.tvInfo.setText("Your Video file has been successfully saved to "+targetMedia.targetFile);
+                showInterstitialAds();
+
+            }
+        });
 
         try {
             MediaTarget mediaTarget = new MediaMuxerMediaTarget(targetMedia.targetFile.getPath(), targetMedia.getIncludedTrackCount(), targetVideoConfiguration.rotation, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
@@ -259,6 +353,14 @@ public class PlayerFragment extends Fragment {
 
     }
 
+    private void showInterstitialAds() {
+        if (mInterstitialAd != null) {
+            mInterstitialAd.show(getActivity());
+        } else {
+            Log.d("TAG", "The interstitial ad wasn't ready yet.");
+        }
+    }
+
 
     private MediaFormat createMediaFormat(@Nullable TargetTrack targetTrack) {
         MediaFormat mediaFormat = null;
@@ -283,6 +385,12 @@ public class PlayerFragment extends Fragment {
         }
 
         return mediaFormat;
+    }
+
+
+    public interface OnProgressListener {
+        void onProgress(int progress);
+        void onCompleted();
     }
 
 

@@ -18,6 +18,7 @@ import com.linkedin.android.litr.analytics.TrackTransformationInfo;
 
 import java.util.List;
 
+import video.overlay.picture.PlayerFragment;
 import video.overlay.picture.data.utils.TrackMetadataUtil;
 
 public class MediaTransformationListener implements TransformationListener {
@@ -25,13 +26,13 @@ public class MediaTransformationListener implements TransformationListener {
     private final Context context;
     private final String requestId;
     private final TransformationState transformationState;
+    private PlayerFragment.OnProgressListener onProgressListener;
 
-    public MediaTransformationListener(@NonNull Context context,
-                                       @NonNull String requestId,
-                                       @NonNull TransformationState transformationState) {
+    public MediaTransformationListener(@NonNull Context context, @NonNull String requestId, @NonNull TransformationState transformationState, PlayerFragment.OnProgressListener onProgressListener) {
         this.context = context;
         this.requestId = requestId;
         this.transformationState = transformationState;
+        this.onProgressListener = onProgressListener;
     }
 
     @Override
@@ -45,6 +46,7 @@ public class MediaTransformationListener implements TransformationListener {
     public void onProgress(@NonNull String id, float progress) {
         if (TextUtils.equals(requestId, id)) {
             transformationState.setProgress((int) (progress * TransformationState.MAX_PROGRESS));
+            onProgressListener.onProgress((int) Math.round(progress));
         }
     }
 
@@ -54,6 +56,7 @@ public class MediaTransformationListener implements TransformationListener {
             transformationState.setState(TransformationState.STATE_COMPLETED);
             transformationState.setProgress(TransformationState.MAX_PROGRESS);
             transformationState.setStats(TrackMetadataUtil.printTransformationStats(context, trackTransformationInfos));
+            onProgressListener.onCompleted();
         }
     }
 
@@ -66,9 +69,7 @@ public class MediaTransformationListener implements TransformationListener {
     }
 
     @Override
-    public void onError(@NonNull String id,
-                        @Nullable Throwable cause,
-                        @Nullable List<TrackTransformationInfo> trackTransformationInfos) {
+    public void onError(@NonNull String id, @Nullable Throwable cause, @Nullable List<TrackTransformationInfo> trackTransformationInfos) {
         if (TextUtils.equals(requestId, id)) {
             transformationState.setState(TransformationState.STATE_ERROR);
             transformationState.setStats(TrackMetadataUtil.printTransformationStats(context, trackTransformationInfos));
