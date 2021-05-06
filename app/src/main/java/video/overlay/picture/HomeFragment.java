@@ -136,6 +136,17 @@ public class HomeFragment extends Fragment {
 
 
         binding.btnNext.setOnClickListener(v -> {
+            if ( TextUtils.isEmpty(imageFilePath)) {
+                Toast.makeText(getActivity(), "Kindly Select an Image File", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            if (TextUtils.isEmpty(videoFilePath)) {
+                Toast.makeText(getActivity(), "Kindly Select a Video File", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+
             Bundle bundle = new Bundle();
             bundle.putString("video", videoFilePath);
             bundle.putString("image", imageFilePath);

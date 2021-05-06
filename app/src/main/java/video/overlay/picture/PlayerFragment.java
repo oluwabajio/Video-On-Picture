@@ -216,8 +216,10 @@ public class PlayerFragment extends Fragment {
 
 
 
-        if ((xx1 == 0) || (xx2 == 0) || (yy1 == 0) || (yy2 == 0)) {
+        if ((xx1 == 0) && (xx2 == 0) && (yy1 == 0) && (yy2 == 0)) {
             dimensions = new PointF(0.5f, 0.5f);
+            Log.e(TAG, "startVideoOverlayTransformation: sboxwidth = " + boxWidth + "boxHeight = " + boxHeight);
+            Log.e(TAG, "isValidPositionAndDimension: xx1 = "+ xx1 + "xx2 = "+xx2 + "yy1 = "+yy1 + " yy2 = "+ yy2);
         } else {
             Log.e(TAG, "startVideoOverlayTransformation: boxwidth = " + boxWidth + "boxHeight = " + boxHeight);
             Log.e(TAG, "startVideoOverlayTransformation: cx2 " + cx2 + "cy2 = " + cy2);
@@ -226,7 +228,7 @@ public class PlayerFragment extends Fragment {
         }
 
 
-        if ((xx1 == 0) || (xx2 == 0) || (yy1 == 0) || (yy2 == 0)) {
+        if ((xx1 == 0) && (xx2 == 0) && (yy1 == 0) && (yy2 == 0)) {
             position = new PointF(0.5f, 0.5f);
         } else {
 
