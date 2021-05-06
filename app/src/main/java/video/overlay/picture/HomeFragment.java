@@ -214,7 +214,7 @@ public class HomeFragment extends Fragment {
 
 
                 updateSourceMedia(sourceMedia, data.getData());
-                File targetFile = new File(TransformationUtil.getTargetFileDirectory(), "VideoOnPicture_" + new SimpleDateFormat("yyyyMM_dd-HHmmss").format(new Date()));
+                File targetFile = new File(TransformationUtil.getTargetFileDirectory(), "VideoOnPicture_" + new SimpleDateFormat("yyyyMM_dd-HHmmss").format(new Date())+".mp4");
                 targetMedia.setTargetFile(targetFile);
                 targetMedia.setTracks(sourceMedia.tracks, bitmap.getWidth(), bitmap.getHeight());
 
