@@ -105,15 +105,10 @@ public class PlayerFragment extends Fragment {
             }
         });
 
-        AdRequest adRequest1 = new AdRequest.Builder().build();
-        binding.adView.loadAd(adRequest1);
-
-
-
 
 
         AdRequest adRequest = new AdRequest.Builder().build();
-        InterstitialAd.load(getActivity(),"ca-app-pub-2439901986027384/3214448329", adRequest, new InterstitialAdLoadCallback() {
+        InterstitialAd.load(getActivity(),getActivity().getString(R.string.admob_interstitial), adRequest, new InterstitialAdLoadCallback() {
             @Override
             public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
                 // The mInterstitialAd reference will be null until

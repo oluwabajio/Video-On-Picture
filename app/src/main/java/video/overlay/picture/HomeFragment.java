@@ -104,21 +104,10 @@ public class HomeFragment extends Fragment {
         targetVideoConfiguration = new TargetVideoConfiguration();
         transformationState = new TransformationState();
 
-        initAds();
         return view;
     }
 
-    private void initAds() {
-        MobileAds.initialize(getActivity(), new OnInitializationCompleteListener() {
-            @Override
-            public void onInitializationComplete(InitializationStatus initializationStatus) {
-            }
-        });
 
-        AdRequest adRequest = new AdRequest.Builder().build();
-        binding.adView.loadAd(adRequest);
-
-    }
 
     private void requestPermission() {
         if (!PermissionHelper.checkPermissions(getActivity())) {
