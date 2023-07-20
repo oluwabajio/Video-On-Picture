@@ -1,6 +1,8 @@
 package video.overlay.picture;
 
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
@@ -52,6 +54,7 @@ import com.linkedin.android.litr.utils.CodecUtils;
 import com.linkedin.android.litr.utils.TranscoderUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -90,6 +93,7 @@ public class HomeFragment extends Fragment {
     PickiT pickiT;
     String pickitProcess = "";
     String RCode;
+    private Uri videoUri;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -149,27 +153,38 @@ public class HomeFragment extends Fragment {
     }
 
     private void selectImage() {
-        if (PermissionHelper.checkPermissions(getActivity())) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             pickImage();
-        } else {
-            PermissionHelper.requestPermissions(this);
+        }else {
+            if (PermissionHelper.checkPermissions(getActivity())) {
+                pickImage();
+            } else {
+                PermissionHelper.requestPermissions(this);
+            }
         }
     }
 
     private void selectVideo() {
-        if (PermissionHelper.checkPermissions(getActivity())) {
-            pickVideo();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        pickVideo();
         } else {
-            PermissionHelper.requestPermissions(this);
+            if (PermissionHelper.checkPermissions(getActivity())) {
+                pickVideo();
+            } else {
+                PermissionHelper.requestPermissions(this);
+            }
         }
     }
 
     private void pickImage() {
-        pickMedia("image/*", PICK_IMAGE);
+
+        pickMedia("image/*", PICK_IMAGE, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
     }
 
     private void pickVideo() {
-        pickMedia("video/*", PICK_VIDEO);
+        pickMedia("video/*", PICK_VIDEO, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
     }
 
 
@@ -185,33 +200,72 @@ public class HomeFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         if (resultCode == RESULT_OK && data.getData() != null) {
             Log.e(TAG, "onActivityResult: " + data.getData());
             if (requestCode == PICK_IMAGE) {
                 pickitProcess = "image";
-                pickiT.getPath(data.getData(), Build.VERSION.SDK_INT);
 
+                imageFilePath = getImageFileFromUri(data.getData()).getAbsolutePath();
 
                 targetMedia.backgroundImageUri = data.getData();
                 binding.imgPicture.setImageURI(data.getData());
 
             } else if (requestCode == PICK_VIDEO) {
                 pickitProcess = "video";
-                pickiT.getPath(data.getData(), Build.VERSION.SDK_INT);
-
-                Bitmap bitmap = BitmapFactory.decodeFile(imageFilePath);
-
-
-                updateSourceMedia(sourceMedia, data.getData());
-                File targetFile = new File(TransformationUtil.getTargetFileDirectory(), "VideoOnPicture_" + new SimpleDateFormat("yyyyMM_dd-HHmmss").format(new Date())+".mp4");
-                targetMedia.setTargetFile(targetFile);
-                targetMedia.setTracks(sourceMedia.tracks, bitmap.getWidth(), bitmap.getHeight());
+              videoFilePath = getVideoFileFromUri(data.getData()).getAbsolutePath();
+                Log.e(TAG, "onActivityResult: videoFilePath = "+ videoFilePath );
+                Bitmap bMap = ThumbnailUtils.createVideoThumbnail(videoFilePath, MediaStore.Video.Thumbnails.MICRO_KIND);
+                binding.imgVideo.setImageBitmap(bMap);
+                videoUri = data.getData();
 
 
                 transformationState.setState(TransformationState.STATE_IDLE);
                 transformationState.setStats(null);
+
+
             }
         }
+        if (!TextUtils.isEmpty(imageFilePath) && !TextUtils.isEmpty(videoFilePath)) {
+            binding.btnNext.setVisibility(View.VISIBLE);
+
+            Bitmap bitmap = null;
+            bitmap = BitmapFactory.decodeFile(imageFilePath);
+            updateSourceMedia(sourceMedia, videoUri);
+            File targetFile = new File(TransformationUtil.getTargetFileDirectory(), "VideoOnPicture_" + new SimpleDateFormat("yyyyMM_dd-HHmmss").format(new Date()) + ".mp4");
+            targetMedia.setTargetFile(targetFile);
+            targetMedia.setTracks(sourceMedia.tracks, bitmap.getWidth(), bitmap.getHeight());
+
+        }
+    }
+
+    private File getImageFileFromUri(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        ContentResolver resolver = getActivity().getContentResolver();
+        Cursor cursor = resolver.query(uri, projection, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            String filePath = cursor.getString(columnIndex);
+            cursor.close();
+            return new File(filePath);
+        }
+
+        return null;
+    }
+    private File getVideoFileFromUri(Uri uri) {
+        String[] projection = {MediaStore.Video.Media.DATA};
+        ContentResolver resolver = getActivity().getContentResolver();
+        Cursor cursor = resolver.query(uri, projection, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
+            String filePath = cursor.getString(columnIndex);
+            cursor.close();
+            return new File(filePath);
+        }
+
+        return null;
     }
 
 
@@ -260,12 +314,12 @@ public class HomeFragment extends Fragment {
 
     }
 
-    private void pickMedia(@NonNull String type, int pickMedia) {
+    private void pickMedia(@NonNull String type, int pickMedia, Uri uri) {
         int PICK_MEDIA = pickMedia;
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_PICK, uri);
         intent.setType(type);
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+//        intent.setAction(Intent.ACTION_GET_CONTENT);
+//        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
         startActivityForResult(Intent.createChooser(intent, "Pick File"), PICK_MEDIA);
     }
@@ -311,18 +365,21 @@ public class HomeFragment extends Fragment {
             if (pickitProcess.equalsIgnoreCase("image")) {
                 imageFilePath = path;
                 Log.e(TAG, "PickiTonCompleteListener: got to image");
-                Bitmap bitmap = BitmapFactory.decodeFile(imageFilePath);
-                Log.e(TAG, "PickiTonCompleteListener: width = " + bitmap.getWidth() + " height = " + bitmap.getHeight());
+//                Bitmap bitmap = BitmapFactory.decodeFile(imageFilePath);
+//                Log.e(TAG, "PickiTonCompleteListener: width = " + bitmap.getWidth() + " height = " + bitmap.getHeight());
             } else if (pickitProcess.equalsIgnoreCase("video")) {
                 videoFilePath = path;
-                Bitmap bMap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MICRO_KIND);
-                binding.imgVideo.setImageBitmap(bMap);
-                Log.e(TAG, "PickiTonCompleteListener: got to video");
+//                Bitmap bMap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MICRO_KIND);
+//                binding.imgVideo.setImageBitmap(bMap);
+//                Log.e(TAG, "PickiTonCompleteListener: got to video");
             }
 
-            if (!TextUtils.isEmpty(imageFilePath) && !TextUtils.isEmpty(videoFilePath)) {
-                binding.btnNext.setVisibility(View.VISIBLE);
-            }
+
+
+        }
+
+        @Override
+        public void PickiTonMultipleCompleteListener(ArrayList<String> arrayList, boolean b, String s) {
 
         }
     };
